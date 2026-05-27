@@ -1,5 +1,5 @@
-PKG_VERSION = v1.11.0
-TALOS_VERSION ?= v1.11.5
+PKG_VERSION = v1.13.0
+TALOS_VERSION ?= v1.13.3
 SBCOVERLAY_VERSION = main
 
 PUSH ?= true
@@ -18,7 +18,7 @@ CONFIG_TXT = dtparam=i2c_arm=on
 EXTENSIONS ?=
 EXTENSION_ARGS = $(foreach ext,$(EXTENSIONS),--system-extension-image $(ext))
 
-SBCOVERLAY_PI4_IMAGE ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.1.5
+SBCOVERLAY_PI4_IMAGE ?= ghcr.io/siderolabs/sbc-raspberrypi:v0.2.0
 
 PKG_REPOSITORY = https://github.com/siderolabs/pkgs.git
 TALOS_REPOSITORY = https://github.com/siderolabs/talos.git
@@ -72,12 +72,12 @@ checkouts-clean:
 patches-pkgs:
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git am "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0001-Patched-for-Raspberry-Pi-5.patch"
-	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
-		git apply $(PATCHES_DIRECTORY)/siderolabs/pkgs/0003-nf-bridge.patch
 
 patches-talos:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		git am "$(PATCHES_DIRECTORY)/siderolabs/talos/0001-Patched-for-Raspberry-Pi-5.patch"
+	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
+		git apply "$(PATCHES_DIRECTORY)/siderolabs/talos/0002-Makefile.patch"
 
 patches-pi5: patches-pkgs patches-talos
 
