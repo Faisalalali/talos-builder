@@ -130,3 +130,4 @@ Pass multiple extensions as a space-separated string inside the quotes.
 ## License
 
 See [LICENSE](LICENSE).
+
