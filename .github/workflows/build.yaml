@@ -1,4 +1,5 @@
 on:
+  pull_request:
   push:
     tags:
       - 'v*.*.*'
@@ -35,15 +36,20 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Extract Talos version from tag
+      - name: Extract Talos version
         id: talos-version
         run: |
-          # Tag format: v1.11.6-rpi5, v1.11.5-cm5, etc.
-          # Extract the upstream Talos version (vMAJOR.MINOR.PATCH) from the tag.
-          TAG="${{ github.ref_name }}"
-          TALOS_VERSION=$(echo "$TAG" | grep -oE '^v[0-9]+\.[0-9]+\.[0-9]+')
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            # Tag format: v1.11.6-rpi5, v1.11.5-cm5, etc.
+            TAG="${{ github.ref_name }}"
+            TALOS_VERSION=$(echo "$TAG" | grep -oE '^v[0-9]+\.[0-9]+\.[0-9]+')
+            echo "Resolved TALOS_VERSION=${TALOS_VERSION} from tag ${TAG}"
+          else
+            # For PR builds, fall back to the default in the Makefile.
+            TALOS_VERSION=$(grep -oP '^TALOS_VERSION \?\= \K.*' Makefile)
+            echo "No tag found; using Makefile default TALOS_VERSION=${TALOS_VERSION}"
+          fi
           echo "TALOS_VERSION=${TALOS_VERSION}" >> $GITHUB_ENV
-          echo "Resolved TALOS_VERSION=${TALOS_VERSION} from tag ${TAG}"
 
       - name: Resolve extension image digests
         run: |
@@ -85,6 +91,10 @@ jobs:
             ASSET_TYPE=installer \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
             installer-pi5
+
+      - name: "Pi5 — Push installer image"
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
           crane push \
             ./checkouts/talos/_out/installer-arm64.tar \
             ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi5
@@ -126,6 +136,10 @@ jobs:
             ASSET_TYPE=installer \
             EXTENSIONS="${{ env.EXTENSIONS }}" \
             installer-pi4
+
+      - name: "Pi4 — Push installer image"
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
           crane push \
             ./checkouts/talos/_out/installer-arm64.tar \
             ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi4
