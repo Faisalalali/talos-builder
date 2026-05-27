@@ -16,7 +16,7 @@ index 8425ba7..0000000 100644
  DEBUG_TOOLS_SOURCE := scratch
  EMBED_TARGET ?= embed
  
-@@ -97,7 +99,7 @@ MARKDOWNLINTCLI_VERSION ?= 0.48.0
+@@ -97,5 +99,5 @@ MARKDOWNLINTCLI_VERSION ?= 0.48.0
  OPERATING_SYSTEM := $(shell uname -s | tr "[:upper:]" "[:lower:]")
 -ARCH := $(shell uname -m | sed 's/x86_64/amd64/' | sed 's/aarch64/arm64/')
 +ARCH := $(shell uname -m | $(SED) 's/x86_64/amd64/' | $(SED) 's/aarch64/arm64/')
