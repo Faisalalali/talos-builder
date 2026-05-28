@@ -6,7 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  REGISTRY_USERNAME: ${{ github.repository_owner }}
   # Extensions to bake into the installer image.
   # Format: space-separated list of image:tag references (digests resolved at build time).
   EXTENSION_ISCSI_IMAGE: ghcr.io/siderolabs/iscsi-tools:v0.2.0
@@ -35,6 +34,9 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Set lowercase registry username
+        run: echo "REGISTRY_USERNAME=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Extract Talos version
         id: talos-version
@@ -110,51 +112,6 @@ jobs:
           unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi5.raw.xz
 
       # ──────────────────────────────────────────────
-      # Raspberry Pi 4 / CM4
-      # ──────────────────────────────────────────────
-
-      - name: "Pi4 — Prepare (clean, re-checkout & patches)"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} checkouts-clean checkouts patches-pi4
-
-      - name: "Pi4 — Kernel"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kernel
-
-      - name: "Pi4 — Kernel initramfs"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} kern_initramfs
-
-      - name: "Pi4 — Installer base"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} installer-base
-
-      - name: "Pi4 — Imager"
-        run: make TALOS_VERSION=${{ env.TALOS_VERSION }} REGISTRY=${{ env.REGISTRY }} REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} imager
-
-      - name: "Pi4 — Build installer image (with extensions)"
-        run: |
-          make TALOS_VERSION=${{ env.TALOS_VERSION }} \
-            REGISTRY=${{ env.REGISTRY }} \
-            REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
-            ASSET_TYPE=installer \
-            EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer-pi4
-
-      - name: "Pi4 — Push installer image"
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          crane push \
-            ./checkouts/talos/_out/installer-arm64.tar \
-            ${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi4
-
-      - name: "Pi4 — Build metal disk image"
-        run: |
-          make TALOS_VERSION=${{ env.TALOS_VERSION }} \
-            REGISTRY=${{ env.REGISTRY }} \
-            REGISTRY_USERNAME=${{ env.REGISTRY_USERNAME }} \
-            ASSET_TYPE=metal \
-            EXTENSIONS="${{ env.EXTENSIONS }}" \
-            installer-pi4
-          unzstd -c ./checkouts/talos/_out/metal-arm64.raw.zst | xz -T0 > ./metal-arm64-rpi4.raw.xz
-
-      # ──────────────────────────────────────────────
       # Release
       # ──────────────────────────────────────────────
 
@@ -164,11 +121,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           INSTALLER_PI5="${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi5"
-          INSTALLER_PI4="${{ env.REGISTRY }}/${{ env.REGISTRY_USERNAME }}/installer:${{ github.ref_name }}-rpi4"
           NOTES=$(cat <<EOF
           > ⚠️ Experimental build, use at your own risk.
 
-          Patched Talos Linux for **Raspberry Pi 5** and **Raspberry Pi 4 / CM4**, including NVMe, NIC and USB support.
+          Patched Talos Linux for **Raspberry Pi 5**, including NVMe, NIC and USB support.
 
           ### Extensions included
 
@@ -180,24 +136,19 @@ jobs:
           | Platform | Disk image | Installer image |
           |----------|-----------|----------------|
           | **RPi 5 / CM5** | \`metal-arm64-rpi5.raw.xz\` | \`${INSTALLER_PI5}\` |
-          | **RPi 4 / CM4** | \`metal-arm64-rpi4.raw.xz\` | \`${INSTALLER_PI4}\` |
 
           ### Fresh install
 
-          Download the disk image for your board and flash it:
+          Download the disk image and flash it:
           \`\`\`bash
-          xz -d metal-arm64-rpi5.raw.xz   # or metal-arm64-rpi4.raw.xz
+          xz -d metal-arm64-rpi5.raw.xz
           dd if=metal-arm64-rpi5.raw of=<disk> bs=4M status=progress
           \`\`\`
 
           ### Upgrade
 
           \`\`\`bash
-          # Raspberry Pi 5
           talosctl upgrade --nodes <NODE_IP> --image ${INSTALLER_PI5}
-
-          # Raspberry Pi 4 / CM4
-          talosctl upgrade --nodes <NODE_IP> --image ${INSTALLER_PI4}
           \`\`\`
 
           EOF
@@ -205,6 +156,5 @@ jobs:
           gh release create \
             ${{ github.ref_name }} \
             metal-arm64-rpi5.raw.xz \
-            metal-arm64-rpi4.raw.xz \
             --title "${{ github.ref_name }}" \
             --notes "$NOTES"

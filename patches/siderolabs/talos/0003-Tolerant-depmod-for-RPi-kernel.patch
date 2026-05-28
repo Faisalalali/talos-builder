@@ -1,0 +1,21 @@
+diff --git a/Dockerfile b/Dockerfile
+index 77a3d81..ecce31d 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -690,7 +690,15 @@ set -euo pipefail
+ 
+ KERNEL_VERSION=$(ls usr/lib/modules)
+ 
+-xargs -a modules-arm64.txt -I {} install -D usr/lib/modules/${KERNEL_VERSION}/{} /build/usr/lib/modules/${KERNEL_VERSION}/{}
++# Install modules that exist, skip missing ones (RPi kernel fork may not
++# produce every module listed in the upstream modules-arm64.txt).
++while IFS= read -r mod || [ -n "$mod" ]; do
++  mod=$(echo "$mod" | xargs)
++  [ -z "$mod" ] && continue
++  if [ -f "usr/lib/modules/${KERNEL_VERSION}/${mod}" ]; then
++    install -D "usr/lib/modules/${KERNEL_VERSION}/${mod}" "/build/usr/lib/modules/${KERNEL_VERSION}/${mod}"
++  fi
++done < modules-arm64.txt
+ 
+ depmod -b /build/usr ${KERNEL_VERSION}
+ EOF

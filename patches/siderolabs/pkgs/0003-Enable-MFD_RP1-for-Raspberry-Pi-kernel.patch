@@ -1,0 +1,19 @@
+diff --git a/kernel/build/pkg.yaml b/kernel/build/pkg.yaml
+index 40f25d5..0000000 100644
+--- a/kernel/build/pkg.yaml
++++ b/kernel/build/pkg.yaml
+@@ -12,6 +12,14 @@ steps:
+       - |
+         cd /src
+         cp -v /pkg/config-${CARCH} .config
++
++        # Enable RP1 MFD driver required by the Raspberry Pi kernel fork.
++        # clk-rp1.c references rp1_get_platform() from drivers/mfd/rp1.c,
++        # which needs CONFIG_MFD_RP1 to be built-in.
++        echo "CONFIG_MFD_RP1=y" >> .config
++        make olddefconfig
++
++        # Copy signing certificates
+         cp -v /pkg/certs/* certs/
+       - |
+         cd /src
