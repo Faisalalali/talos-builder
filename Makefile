@@ -67,6 +67,8 @@ patches-pkgs:
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0003-Enable-MFD_RP1-for-Raspberry-Pi-kernel.patch"
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0004-Ignore-RPi-kernel-hardening-violations.patch"
+	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
+		git add -A && git commit -m "Apply Raspberry Pi kernel patches"
 
 patches-talos:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
@@ -75,6 +77,8 @@ patches-talos:
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/talos/0002-Makefile.patch"
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/talos/0003-Tolerant-depmod-for-RPi-kernel.patch"
+	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
+		git add -A && git commit -m "Apply Raspberry Pi Talos patches"
 
 patches-pi5: patches-pkgs patches-talos
 
