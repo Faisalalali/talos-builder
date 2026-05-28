@@ -1,0 +1,16 @@
+diff --git a/kernel/build/scripts/filter-hardened-check.py b/kernel/build/scripts/filter-hardened-check.py
+index 0c21d17..0000000 100644
+--- a/kernel/build/scripts/filter-hardened-check.py
++++ b/kernel/build/scripts/filter-hardened-check.py
+@@ -44,6 +44,11 @@ IGNORE_VIOLATIONS_BY_ARCH = {
+         'CONFIG_LSM_MMAP_MIN_ADDR', # on arm64, this can be set only to 32768: https://cateee.net/lkddb/web-lkddb/LSM_MMAP_MIN_ADDR.html
+         'CONFIG_RODATA_FULL_DEFAULT_ENABLED', # removed in 6.18
+         'CONFIG_KASAN_HW_TAGS', # incompatible with OpenZFS and NVIDIA due to 'GPL-incompatible module nvidia.ko uses GPL-only symbol 'kasan_flag_enabled''
++        'CONFIG_HARDENED_USERCOPY_DEFAULT_ON', # not available in the Raspberry Pi kernel fork
++        'CONFIG_KSTACK_ERASE', # GCC plugin, not available in the Raspberry Pi kernel fork built with Clang
++        'CONFIG_KSTACK_ERASE_METRICS', # depends on CONFIG_KSTACK_ERASE
++        'CONFIG_KSTACK_ERASE_RUNTIME_DISABLE', # depends on CONFIG_KSTACK_ERASE
++        'CONFIG_ARM64_GCS', # Guarded Control Stack not supported in the Raspberry Pi kernel fork
+     },
+     'amd64': {
+         'CONFIG_CFI_AUTO_DEFAULT', # Disabled due to issues with GPL-incompatible modules

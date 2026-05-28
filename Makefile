@@ -74,6 +74,8 @@ patches-pkgs:
 		git am "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0001-Patched-for-Raspberry-Pi-5.patch"
 	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
 		git apply "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0003-Enable-MFD_RP1-for-Raspberry-Pi-kernel.patch"
+	cd "$(CHECKOUTS_DIRECTORY)/pkgs" && \
+		git apply "$(PATCHES_DIRECTORY)/siderolabs/pkgs/0004-Ignore-RPi-kernel-hardening-violations.patch"
 
 patches-talos:
 	cd "$(CHECKOUTS_DIRECTORY)/talos" && \
